@@ -61,6 +61,7 @@ export function ConsultationRoom({
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   // Store local video track — attach after connected screen renders
   const localVideoTrackRef = useRef<LocalVideoTrack | null>(null);
+  const remoteAudioRef = useRef<HTMLAudioElement>(null);
   // Store pending remote video track — attach after connected screen renders
   const pendingRemoteTrackRef = useRef<RemoteTrack | null>(null);
 
@@ -101,13 +102,22 @@ export function ConsultationRoom({
   }, []);
 
   const attachRemoteTrack = useCallback((track: RemoteTrack) => {
-    if (track.kind !== Track.Kind.Video) return;
-    if (remoteVideoRef.current) {
-      // Video element already mounted — attach immediately
-      track.attach(remoteVideoRef.current);
-    } else {
-      // Video element not mounted yet — store for deferred attach via useEffect
-      pendingRemoteTrackRef.current = track;
+    if (track.kind === Track.Kind.Video) {
+      if (remoteVideoRef.current) {
+        track.attach(remoteVideoRef.current);
+      } else {
+        pendingRemoteTrackRef.current = track;
+      }
+    } else if (track.kind === Track.Kind.Audio) {
+      if (remoteAudioRef.current) {
+        track.attach(remoteAudioRef.current);
+      } else {
+        // Attach to a detached <audio> element so audio plays immediately
+        const audioEl = document.createElement("audio");
+        audioEl.autoplay = true;
+        document.body.appendChild(audioEl);
+        track.attach(audioEl);
+      }
     }
   }, []);
 
@@ -210,8 +220,8 @@ export function ConsultationRoom({
   const toggleMute = useCallback(async () => {
     const room = roomRef.current;
     if (!room) return;
-    const local: LocalParticipant = room.localParticipant;
-    await local.setMicrophoneEnabled(isMuted);
+    // isMuted=true means mic is currently off — enabling it means setMicrophoneEnabled(true)
+    await room.localParticipant.setMicrophoneEnabled(isMuted);
     setIsMuted((m) => !m);
   }, [isMuted]);
 
@@ -247,7 +257,7 @@ export function ConsultationRoom({
       localTrack.attach(localVideoRef.current);
     }
 
-    // Flush any remote track that arrived before the video element mounted
+    // Flush pending remote video track
     const remoteTrack = pendingRemoteTrackRef.current;
     if (remoteTrack && remoteVideoRef.current) {
       remoteTrack.attach(remoteVideoRef.current);
@@ -255,11 +265,15 @@ export function ConsultationRoom({
     }
   }, [connectionState]);
 
-  // Cleanup on unmount
+  // Cleanup on unmount — also remove any dynamically appended <audio> elements
   useEffect(() => {
     return () => {
       stopTimer();
       roomRef.current?.disconnect();
+      // Clean up dynamically created audio elements
+      document
+        .querySelectorAll("audio[data-livekit-remote]")
+        .forEach((el) => el.remove());
     };
   }, [stopTimer]);
 
@@ -366,7 +380,7 @@ export function ConsultationRoom({
     <div className="flex-1 flex flex-col bg-black">
       {/* Video Grid */}
       <div className="flex-1 relative grid grid-cols-1 md:grid-cols-2 gap-0.5 bg-black min-h-0">
-        {/* Remote video (doctor) */}
+        {/* Remote video */}
         <div className="relative bg-zinc-900 flex items-center justify-center overflow-hidden md:col-span-1">
           <video
             ref={remoteVideoRef}
@@ -374,6 +388,8 @@ export function ConsultationRoom({
             playsInline
             className="w-full h-full object-cover"
           />
+          {/* Hidden audio element for remote participant's microphone */}
+          <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
           {!remoteConnected && (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-400 gap-3">
               <div className="h-16 w-16 rounded-full bg-zinc-800 flex items-center justify-center text-2xl font-serif text-zinc-300">
