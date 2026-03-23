@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Card,
@@ -50,13 +50,6 @@ const moodColors = [
   "bg-green-400",
 ];
 
-function getGreeting() {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
-}
-
 export function DashboardContent({
   profile,
   recentCheckins,
@@ -64,6 +57,15 @@ export function DashboardContent({
 }: DashboardContentProps) {
   const [checkedIn, setCheckedIn] = useState(hasCheckedInToday);
   const firstName = profile.full_name?.split(" ")[0] || "there";
+
+  // Use useEffect so greeting is only computed client-side, avoiding SSR/CSR mismatch
+  const [greeting, setGreeting] = useState("");
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting("Good morning");
+    else if (hour < 17) setGreeting("Good afternoon");
+    else setGreeting("Good evening");
+  }, []);
 
   const avgMood =
     recentCheckins.length > 0
@@ -77,7 +79,7 @@ export function DashboardContent({
     <main className="  px-4 py-8 max-w-6xl mx-auto">
       <div className="mb-8">
         <h1 className="font-serif text-3xl font-medium text-foreground">
-          {getGreeting()}, {firstName}
+          {greeting}, {firstName}
         </h1>
         <p className="text-muted-foreground mt-1">
           {"Here's your wellness overview for today"}

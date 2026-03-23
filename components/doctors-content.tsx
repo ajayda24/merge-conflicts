@@ -11,7 +11,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Phone, Mail, Star, Stethoscope } from "lucide-react";
+import {
+  Search,
+  MapPin,
+  Phone,
+  Mail,
+  Star,
+  Stethoscope,
+  ShieldCheck,
+  Brain,
+} from "lucide-react";
 
 interface Doctor {
   id: string;
@@ -23,34 +32,40 @@ interface Doctor {
   bio: string | null;
   image_url: string | null;
   rating: number;
+  registration_type: "NMC" | "RCI" | null;
+  years_experience: number | null;
 }
 
 interface DoctorsContentProps {
   doctors: Doctor[];
 }
 
-const specialties = [
+const SPECIALTY_FILTERS = [
   "All",
+  "Psychiatry",
+  "Clinical Psychology",
+  "Counselling Psychology",
+  "Rehabilitation Psychology",
   "Psychiatrist",
-  "Clinical Psychologist",
-  "Counseling Psychologist",
   "Therapist",
 ];
 
 export function DoctorsContent({ doctors }: DoctorsContentProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSpecialty, setSelectedSpecialty] = useState("All");
+  const [selectedFilter, setSelectedFilter] = useState("All");
 
   const filteredDoctors = doctors.filter((doctor) => {
+    const q = searchQuery.toLowerCase();
     const matchesSearch =
-      doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doctor.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doctor.specialty.toLowerCase().includes(searchQuery.toLowerCase());
+      doctor.name.toLowerCase().includes(q) ||
+      (doctor.location?.toLowerCase().includes(q) ?? false) ||
+      doctor.specialty.toLowerCase().includes(q);
 
-    const matchesSpecialty =
-      selectedSpecialty === "All" || doctor.specialty === selectedSpecialty;
+    const matchesFilter =
+      selectedFilter === "All" ||
+      doctor.specialty.toLowerCase().includes(selectedFilter.toLowerCase());
 
-    return matchesSearch && matchesSpecialty;
+    return matchesSearch && matchesFilter;
   });
 
   return (
@@ -60,37 +75,35 @@ export function DoctorsContent({ doctors }: DoctorsContentProps) {
           Find Professional Help
         </h1>
         <p className="text-muted-foreground mt-1">
-          Connect with qualified mental health professionals who specialize in{" "}
+          Connect with qualified mental health professionals who specialise in{" "}
           {"women's"} wellness
         </p>
       </div>
 
-      {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-8">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by name, location, or specialty..."
-            className="pl-10"
-          />
-        </div>
+      {/* Search */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search by name, location, or specialty..."
+          className="pl-10"
+        />
       </div>
 
       {/* Specialty Filters */}
       <div className="flex gap-2 overflow-x-auto pb-4 mb-6">
-        {specialties.map((specialty) => (
+        {SPECIALTY_FILTERS.map((f) => (
           <button
-            key={specialty}
-            onClick={() => setSelectedSpecialty(specialty)}
+            key={f}
+            onClick={() => setSelectedFilter(f)}
             className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
-              selectedSpecialty === specialty
+              selectedFilter === f
                 ? "bg-primary text-primary-foreground"
-                : "bg-secondary hover:bg-secondary/80"
+                : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
             }`}
           >
-            {specialty}
+            {f}
           </button>
         ))}
       </div>
@@ -100,7 +113,9 @@ export function DoctorsContent({ doctors }: DoctorsContentProps) {
         <Card className="border-0 shadow-md">
           <CardContent className="py-12 text-center">
             <Stethoscope className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-            <h3 className="font-medium text-lg mb-1">No doctors found</h3>
+            <h3 className="font-medium text-lg mb-1 text-foreground">
+              No professionals found
+            </h3>
             <p className="text-muted-foreground text-sm">
               Try adjusting your search or filters
             </p>
@@ -116,25 +131,54 @@ export function DoctorsContent({ doctors }: DoctorsContentProps) {
               <CardHeader className="pb-2">
                 <div className="flex items-start gap-4">
                   <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center shrink-0">
-                    <span className="font-serif text-xl text-primary">
-                      {doctor.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </span>
+                    {doctor.registration_type === "RCI" ? (
+                      <Brain className="h-7 w-7 text-accent-foreground" />
+                    ) : (
+                      <span className="font-serif text-xl text-primary">
+                        {doctor.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .slice(0, 2)}
+                      </span>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <CardTitle className="font-serif text-lg">
-                      {doctor.name}
-                    </CardTitle>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <CardTitle className="font-serif text-lg text-foreground">
+                        {doctor.name}
+                      </CardTitle>
+                      {doctor.registration_type && (
+                        <Badge
+                          variant="outline"
+                          className={`text-xs shrink-0 ${
+                            doctor.registration_type === "NMC"
+                              ? "border-blue-400/40 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                              : "border-teal-400/40 text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/20"
+                          }`}
+                        >
+                          <ShieldCheck className="h-3 w-3 mr-1" />
+                          {doctor.registration_type} Verified
+                        </Badge>
+                      )}
+                    </div>
                     <CardDescription className="mt-0.5">
                       {doctor.specialty}
                     </CardDescription>
-                    <div className="flex items-center gap-1 mt-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm font-medium">
-                        {doctor.rating}
-                      </span>
+                    <div className="flex items-center gap-3 mt-1 flex-wrap">
+                      {doctor.rating > 0 && (
+                        <div className="flex items-center gap-1">
+                          <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                          <span className="text-sm font-medium text-foreground">
+                            {doctor.rating}
+                          </span>
+                        </div>
+                      )}
+                      {doctor.years_experience != null && (
+                        <span className="text-xs text-muted-foreground">
+                          {doctor.years_experience} yrs exp.
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -146,10 +190,12 @@ export function DoctorsContent({ doctors }: DoctorsContentProps) {
                   </p>
                 )}
                 <div className="flex flex-col gap-2 text-sm">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <MapPin className="h-4 w-4 shrink-0" />
-                    <span className="truncate">{doctor.location}</span>
-                  </div>
+                  {doctor.location && (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <MapPin className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{doctor.location}</span>
+                    </div>
+                  )}
                   {doctor.phone && (
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Phone className="h-4 w-4 shrink-0" />
@@ -186,8 +232,26 @@ export function DoctorsContent({ doctors }: DoctorsContentProps) {
         </div>
       )}
 
+      {/* Are you a professional? CTA */}
+      <Card className="mt-8 border-0 shadow-md bg-gradient-to-br from-primary/5 to-accent/5">
+        <CardContent className="py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <p className="font-medium text-foreground">
+              Are you a mental health professional?
+            </p>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Register with your NMC or RCI credentials to appear in this
+              directory.
+            </p>
+          </div>
+          <Button asChild variant="outline" className="shrink-0">
+            <a href="/auth/professional-register">Register as Professional</a>
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* Disclaimer */}
-      <Card className="mt-8 border-0 bg-accent/10">
+      <Card className="mt-4 border-0 bg-muted/40">
         <CardContent className="py-4">
           <p className="text-sm text-muted-foreground text-center">
             <strong>Note:</strong> This directory is for informational purposes.

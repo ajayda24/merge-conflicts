@@ -165,9 +165,16 @@ export default function HomePage() {
             Join thousands of women taking control of their mental wellness
             journey
           </p>
-          <Button asChild size="lg" className="h-12 px-8 text-base">
-            <Link href="/auth/sign-up">Create Free Account</Link>
-          </Button>
+          <div className="flex flex-wrap sm:flex-nowrap gap-4 mx-auto max-w-md">
+            <Button asChild size="lg" className="h-12 px-8 text-base">
+              <Link href="/auth/sign-up">Create Free Account</Link>
+            </Button>
+            <Button asChild size="lg" className="h-12 px-8 text-base">
+              <Link href="/auth/professional-register">
+                Register as Professional
+              </Link>
+            </Button>
+          </div>
         </section>
       </main>
 
@@ -179,9 +186,16 @@ export default function HomePage() {
               <Heart className="h-5 w-5 fill-current text-primary" />
               <span className="font-serif">MatriAI</span>
             </div>
-            <p className="text-sm text-muted-foreground text-center">
-              MatriAI is not a substitute for professional mental health care.
-              If you are in crisis, please seek immediate help.
+            {/* <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <Link
+                href="/auth/professional-register"
+                className="hover:text-primary transition-colors"
+              >
+                Register as Professional
+              </Link>
+            </div> */}
+            <p className="text-sm text-muted-foreground text-center sm:text-right">
+              Not a substitute for professional mental health care.
             </p>
           </div>
         </div>
