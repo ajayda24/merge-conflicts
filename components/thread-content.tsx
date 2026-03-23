@@ -8,7 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Clock, User, Send } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { ArrowLeft, Clock, User, Send, Trash2 } from "lucide-react";
 
 interface Thread {
   id: string;
@@ -45,6 +53,8 @@ export function ThreadContent({
   const [newComment, setNewComment] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deleteCommentId, setDeleteCommentId] = useState<string | null>(null);
+  const [isDeletingComment, setIsDeletingComment] = useState(false);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -83,6 +93,21 @@ export function ThreadContent({
     setIsSubmitting(false);
   };
 
+  const handleDeleteComment = async (id: string) => {
+    setIsDeletingComment(true);
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("comments")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", userId);
+    if (!error) {
+      setComments(comments.filter((c) => c.id !== id));
+    }
+    setIsDeletingComment(false);
+    setDeleteCommentId(null);
+  };
+
   return (
     <main className="  px-4 py-8 max-w-3xl mx-auto">
       <Link
@@ -92,6 +117,28 @@ export function ThreadContent({
         <ArrowLeft className="h-4 w-4" />
         Back to Community
       </Link>
+
+      {/* Delete comment confirmation dialog */}
+      <Dialog open={!!deleteCommentId} onOpenChange={(open) => !open && setDeleteCommentId(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-serif">Delete this reply?</DialogTitle>
+            <DialogDescription>
+              This will permanently remove your reply. This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDeleteCommentId(null)}>Cancel</Button>
+            <Button
+              disabled={isDeletingComment}
+              onClick={() => deleteCommentId && handleDeleteComment(deleteCommentId)}
+              className="bg-pink-600 hover:bg-pink-700 text-white"
+            >
+              {isDeletingComment ? "Deleting..." : "Delete reply"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Thread */}
       <Card className="border-0 shadow-md mb-6">
@@ -133,15 +180,27 @@ export function ThreadContent({
         {comments.map((comment) => (
           <Card key={comment.id} className="border-0 shadow-sm bg-secondary/30">
             <CardContent className="pt-4">
-              <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
-                <span className="flex items-center gap-1">
-                  <User className="h-3 w-3" />
-                  {comment.is_anonymous ? "Anonymous" : username}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  {formatDate(comment.created_at)}
-                </span>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <User className="h-3 w-3" />
+                    {comment.is_anonymous ? "Anonymous" : username}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {formatDate(comment.created_at)}
+                  </span>
+                </div>
+                {/* Delete button — only for comment owner */}
+                {comment.user_id === userId && (
+                  <button
+                    onClick={() => setDeleteCommentId(comment.id)}
+                    className="p-1 rounded-lg text-muted-foreground hover:text-pink-600 hover:bg-pink-50 dark:hover:bg-pink-500/10 transition-colors"
+                    title="Delete reply"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
               </div>
               <p className="text-sm leading-relaxed">{comment.content}</p>
             </CardContent>

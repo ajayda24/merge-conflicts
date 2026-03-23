@@ -1,6 +1,6 @@
 import { consumeStream, convertToModelMessages, streamText, UIMessage } from 'ai'
 
-import {createOpenAI} from '@ai-sdk/openai'
+import { createOpenAI } from '@ai-sdk/openai'
 
 const openrouter = createOpenAI({
   baseURL: 'https://openrouter.ai/api/v1',

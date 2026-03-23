@@ -45,20 +45,20 @@ interface FormData {
 
 const DOCTOR_SPECIALIZATIONS = [
   "Psychiatry",
-  "Neuropsychiatry",
-  "Geriatric Psychiatry",
-  "Child & Adolescent Psychiatry",
-  "Addiction Psychiatry",
-  "Forensic Psychiatry",
+  "Gynaecology",
+  "General Medicine",
+  "Obstetrics",
+  "Paediatrics",
+  "Internal Medicine",
 ];
 
 const COUNSELLOR_SPECIALIZATIONS = [
   "Clinical Psychology",
   "Counselling Psychology",
-  "Rehabilitation Psychology",
-  "Health Psychology",
-  "Neuropsychology",
   "Trauma & PTSD",
+  "Health Psychology",
+  "Marriage & Family Therapy",
+  "Neuropsychology",
 ];
 
 const STEPS = [

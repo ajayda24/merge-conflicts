@@ -14,7 +14,8 @@ import {
   CULTURAL_QUESTIONS,
 } from '@/lib/matriai-data'
 import {
-  getUser, saveUser, createNewUser, generateSeedData,
+  getUser, saveUser, createNewUser,
+  saveScreeningToDB,
   type MatriAIUser, type ScreeningEntry,
 } from '@/lib/matriai-storage'
 
@@ -163,11 +164,6 @@ export default function OnboardingPage() {
       user.screenings.push(entry)
     }
 
-    // Generate seed data
-    const seed = generateSeedData(lifeStage)
-    user.checkIns = seed.checkIns
-    if (user.screenings.length === 0) user.screenings.push(seed.screening)
-
     saveUser(user)
 
     // Also save to Supabase
@@ -175,14 +171,38 @@ export default function OnboardingPage() {
       const supabase = createClient()
       const { data: { user: authUser } } = await supabase.auth.getUser()
       if (authUser) {
+        // Step 1: always update the critical onboarding flag (columns guaranteed to exist)
         await supabase.from('profiles').update({
           life_stage: lifeStage,
           onboarding_complete: true,
           updated_at: new Date().toISOString(),
         }).eq('id', authUser.id)
+
+        // Step 2: try to persist extended fields — safe to fail if columns don't exist yet
+        try {
+          await supabase.from('profiles').update({
+            age: Number(age),
+            conditions,
+            cultural_context: culturalAnswers,
+          }).eq('id', authUser.id)
+        } catch {
+          // extended columns may not exist — non-fatal
+        }
       }
     } catch (e) {
       console.error('Supabase save error:', e)
+    }
+
+    // Persist screening to DB
+    if (screeningResult) {
+      const entry: ScreeningEntry = {
+        date: new Date().toISOString().split('T')[0],
+        type: screeningResult.type as 'EPDS' | 'PHQ4',
+        score: screeningResult.score,
+        severity: screeningResult.severity as 'low' | 'moderate' | 'severe',
+        answers: screeningAnswers,
+      }
+      saveScreeningToDB(entry)
     }
 
     router.push('/dashboard')
@@ -373,7 +393,7 @@ export default function OnboardingPage() {
               {/* Progress */}
               <div className="space-y-2">
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{isEPDS ? 'EPDS' : 'PHQ-4'}</span>
+                  <span>How you&apos;ve been feeling</span>
                   <span>{screeningIdx + 1} / {questions.length}</span>
                 </div>
                 <Progress value={((screeningIdx + 1) / questions.length) * 100} className="h-2" />

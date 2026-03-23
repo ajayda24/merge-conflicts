@@ -23,8 +23,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
-import { MessageCircle, Plus, Users, Clock, User } from "lucide-react";
+import { MessageCircle, Plus, Users, Clock, User, Trash2 } from "lucide-react";
 
 interface Thread {
   id: string;
@@ -67,6 +68,8 @@ export function CommunityContent({
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
 
   const filteredThreads = selectedCategory
@@ -102,6 +105,17 @@ export function CommunityContent({
     }
 
     setIsSubmitting(false);
+  };
+
+  const handleDeleteThread = async (id: string) => {
+    setIsDeleting(true);
+    const supabase = createClient();
+    const { error } = await supabase.from("threads").delete().eq("id", id).eq("user_id", userId);
+    if (!error) {
+      setThreads(threads.filter((t) => t.id !== id));
+    }
+    setIsDeleting(false);
+    setDeleteTargetId(null);
   };
 
   const formatDate = (dateString: string) => {
@@ -203,6 +217,29 @@ export function CommunityContent({
         </Dialog>
       </div>
 
+      {/* Delete confirmation dialog */}
+      <Dialog open={!!deleteTargetId} onOpenChange={(open) => !open && setDeleteTargetId(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-serif">Delete this post?</DialogTitle>
+            <DialogDescription>
+              This will permanently remove your post and all its comments. This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDeleteTargetId(null)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              disabled={isDeleting}
+              onClick={() => deleteTargetId && handleDeleteThread(deleteTargetId)}
+              className="bg-pink-600 hover:bg-pink-700"
+            >
+              {isDeleting ? "Deleting..." : "Delete post"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Category Filters */}
       <div className="flex gap-2 overflow-x-auto pb-4 mb-6 scrollbar-hide">
         <button
@@ -266,11 +303,23 @@ export function CommunityContent({
                       </span>
                     </CardDescription>
                   </div>
-                  {thread.category && (
-                    <Badge variant="secondary" className="shrink-0">
-                      {thread.category}
-                    </Badge>
-                  )}
+                  <div className="flex items-center gap-2 shrink-0">
+                    {thread.category && (
+                      <Badge variant="secondary" className="shrink-0">
+                        {thread.category}
+                      </Badge>
+                    )}
+                    {/* Delete button — only for post owner */}
+                    {thread.user_id === userId && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setDeleteTargetId(thread.id); }}
+                        className="p-1.5 rounded-lg text-muted-foreground hover:text-pink-600 hover:bg-pink-50 dark:hover:bg-pink-500/10 transition-colors"
+                        title="Delete post"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
