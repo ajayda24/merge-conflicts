@@ -32,10 +32,18 @@ export default async function ThreadPage({ params }: Props) {
     .eq('thread_id', id)
     .order('created_at', { ascending: true })
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('full_name')
+    .eq('id', user.id)
+    .single()
+
+  const username = profile?.full_name || user.email || 'Member'
+
   return (
     <div className="min-h-screen bg-background">
       <AppHeader />
-      <ThreadContent thread={thread} comments={comments || []} userId={user.id} />
+      <ThreadContent thread={thread} comments={comments || []} userId={user.id} username={username} />
     </div>
   )
 }

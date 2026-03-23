@@ -40,6 +40,7 @@ interface Thread {
 interface CommunityContentProps {
   threads: Thread[];
   userId: string;
+  username: string;
 }
 
 const categories = [
@@ -56,6 +57,7 @@ const categories = [
 export function CommunityContent({
   threads: initialThreads,
   userId,
+  username,
 }: CommunityContentProps) {
   const [threads, setThreads] = useState(initialThreads);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -256,7 +258,7 @@ export function CommunityContent({
                     <CardDescription className="mt-1 flex items-center gap-3 text-xs">
                       <span className="flex items-center gap-1">
                         <User className="h-3 w-3" />
-                        {thread.is_anonymous ? "Anonymous" : "Member"}
+                        {thread.is_anonymous ? "Anonymous" : username}
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />

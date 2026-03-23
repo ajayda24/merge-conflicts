@@ -19,10 +19,18 @@ export default async function CommunityPage() {
     `)
     .order('created_at', { ascending: false })
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('full_name')
+    .eq('id', user.id)
+    .single()
+
+  const username = profile?.full_name || user.email || 'Member'
+
   return (
     <div className="min-h-screen bg-background">
       <AppHeader />
-      <CommunityContent threads={threads || []} userId={user.id} />
+      <CommunityContent threads={threads || []} userId={user.id} username={username} />
     </div>
   )
 }

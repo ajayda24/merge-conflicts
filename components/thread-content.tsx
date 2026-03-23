@@ -32,12 +32,14 @@ interface ThreadContentProps {
   thread: Thread;
   comments: Comment[];
   userId: string;
+  username: string;
 }
 
 export function ThreadContent({
   thread,
   comments: initialComments,
   userId,
+  username,
 }: ThreadContentProps) {
   const [comments, setComments] = useState(initialComments);
   const [newComment, setNewComment] = useState("");
@@ -102,7 +104,7 @@ export function ThreadContent({
               <div className="flex items-center gap-3 text-sm text-muted-foreground mt-2">
                 <span className="flex items-center gap-1">
                   <User className="h-4 w-4" />
-                  {thread.is_anonymous ? "Anonymous" : "Member"}
+                  {thread.is_anonymous ? "Anonymous" : username}
                 </span>
                 <span className="flex items-center gap-1">
                   <Clock className="h-4 w-4" />
@@ -134,7 +136,7 @@ export function ThreadContent({
               <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
                 <span className="flex items-center gap-1">
                   <User className="h-3 w-3" />
-                  {comment.is_anonymous ? "Anonymous" : "Member"}
+                  {comment.is_anonymous ? "Anonymous" : username}
                 </span>
                 <span className="flex items-center gap-1">
                   <Clock className="h-3 w-3" />
