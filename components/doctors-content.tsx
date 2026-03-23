@@ -43,7 +43,8 @@ interface DoctorsContentProps {
   currentUserId: string;
 }
 
-const ROLE_FILTERS = ["All", "Doctor", "Counsellor"];
+// Users only ever see verified professionals — unverified are always hidden
+const ROLE_FILTERS = ["All", "Psychologist", "Counsellor", "Psychiatrist", "Gynaecologist"];
 
 const STATUS_CONFIG = {
   verified: {
@@ -62,7 +63,7 @@ const STATUS_CONFIG = {
     label: "Not Verified",
     icon: ShieldOff,
     className:
-      "border-red-400/40 text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20",
+      "border-pink-400/40 text-pink-700 dark:text-pink-400 bg-pink-50 dark:bg-pink-900/20",
   },
 };
 
@@ -74,29 +75,33 @@ const REG_TYPE_CONFIG = {
 export function DoctorsContent({ professionals }: DoctorsContentProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
-  const [showAll, setShowAll] = useState(false);
 
-  const filtered = professionals.filter((p) => {
+  // Always hide unverified — users must never see pending or rejected professionals
+  const verified = professionals.filter((p) => p.is_verified);
+
+  const filtered = verified.filter((p) => {
     const q = searchQuery.toLowerCase();
     const matchesSearch =
       p.full_name.toLowerCase().includes(q) ||
-      p.specialization.toLowerCase().includes(q) ||
-      p.registration_type.toLowerCase().includes(q);
-    const matchesRole =
-      roleFilter === "All" || p.role.toLowerCase() === roleFilter.toLowerCase();
+      p.specialization.toLowerCase().includes(q);
+
+    if (roleFilter === "All") return matchesSearch;
+
+    // Map filter labels to specialization keywords
+    const FILTER_MAP: Record<string, string[]> = {
+      Psychologist: ["psychology", "counselling psychology", "clinical psychology"],
+      Counsellor:   ["counsellor", "counseling", "therapy"],
+      Psychiatrist: ["psychiatry", "psychiatrist"],
+      Gynaecologist:["gynaecolog", "obstetrics"],
+    };
+    const keywords = FILTER_MAP[roleFilter] || [roleFilter.toLowerCase()];
+    const matchesRole = keywords.some(
+      (kw) =>
+        p.specialization.toLowerCase().includes(kw) ||
+        p.role.toLowerCase().includes(kw)
+    );
     return matchesSearch && matchesRole;
   });
-
-  // When showAll is false, show verified first, then others (for non-owners)
-  const displayed = showAll
-    ? filtered
-    : filtered.filter(
-        (p) => p.is_verified || !professionals.some((x) => x.is_verified),
-      );
-
-  // If there are verified professionals, default to showing only them unless user clicks "Show all"
-  const hasVerified = professionals.some((p) => p.is_verified);
-  const hiddenCount = filtered.length - displayed.length;
 
   return (
     <main className="container px-4 py-8 max-w-5xl mx-auto">
@@ -167,16 +172,14 @@ export function DoctorsContent({ professionals }: DoctorsContentProps) {
       ) : (
         <>
           <div className="grid gap-4 md:grid-cols-2">
-            {displayed.map((pro) => {
+            {filtered.map((pro: Professional) => {
               const statusCfg = STATUS_CONFIG[pro.status];
               const StatusIcon = statusCfg.icon;
 
               return (
                 <Card
                   key={pro.id}
-                  className={`border shadow-md hover:shadow-lg transition-shadow ${
-                    !pro.is_verified ? "opacity-75" : ""
-                  }`}
+                  className="border shadow-md hover:shadow-lg transition-shadow"
                 >
                   <CardHeader className="pb-3">
                     <div className="flex items-start gap-4">
@@ -208,7 +211,7 @@ export function DoctorsContent({ professionals }: DoctorsContentProps) {
                           {/* Registration type */}
                           <Badge
                             variant="outline"
-                            className={`text-xs ${REG_TYPE_CONFIG[pro.registration_type]}`}
+                          className={`text-xs ${REG_TYPE_CONFIG[pro.registration_type as keyof typeof REG_TYPE_CONFIG]}`}
                           >
                             {pro.registration_type} Registered
                           </Badge>
@@ -249,55 +252,22 @@ export function DoctorsContent({ professionals }: DoctorsContentProps) {
                       </p>
                     </div>
 
-                    {/* Action buttons — only shown for verified */}
-                    {pro.is_verified && (
-                      <div className="flex gap-2 pt-1">
-                        <Button asChild size="sm" className="flex-1">
-                          <a href={`mailto:${pro.email}`}>
-                            <Mail className="h-4 w-4 mr-2" />
-                            Email
-                          </a>
-                        </Button>
-                      </div>
-                    )}
-
-                    {pro.status === "pending" && (
-                      <p className="text-xs text-yellow-600 dark:text-yellow-400">
-                        This professional is awaiting verification and cannot be
-                        contacted yet.
-                      </p>
-                    )}
-                    {pro.status === "rejected" && (
-                      <p className="text-xs text-red-600 dark:text-red-400">
-                        Verification was not approved for this profile.
-                      </p>
-                    )}
+                    {/* All shown professionals are verified — contact is always available */}
+                    <div className="flex gap-2 pt-1">
+                      <Button asChild size="sm" className="flex-1">
+                        <a href={`mailto:${pro.email}`}>
+                          <Mail className="h-4 w-4 mr-2" />
+                          Email
+                        </a>
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               );
             })}
           </div>
 
-          {/* Show all / show less toggle */}
-          {hasVerified && hiddenCount > 0 && (
-            <div className="mt-6 text-center">
-              <Button variant="outline" onClick={() => setShowAll(true)}>
-                Show {hiddenCount} more professional
-                {hiddenCount !== 1 ? "s" : ""} (pending / unverified)
-              </Button>
-            </div>
-          )}
-          {showAll && hasVerified && (
-            <div className="mt-2 text-center">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowAll(false)}
-              >
-                Show verified only
-              </Button>
-            </div>
-          )}
+
         </>
       )}
 

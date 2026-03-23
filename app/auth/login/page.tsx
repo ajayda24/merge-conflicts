@@ -1,6 +1,7 @@
 'use client'
 
 import { createClient } from '@/lib/supabase/client'
+import { syncUserFromDB } from '@/lib/matriai-storage'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -30,6 +31,8 @@ export default function LoginPage() {
         password,
       })
       if (error) throw error
+      // Hydrate localStorage from DB before navigating
+      await syncUserFromDB()
       router.push('/dashboard')
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : 'An error occurred')

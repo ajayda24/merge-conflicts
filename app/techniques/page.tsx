@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Home, ClipboardCheck, Lightbulb, Stethoscope, Clock, ChevronDown } from 'lucide-react'
-import { STAGE_COLORS, TECHNIQUES } from '@/lib/matriai-data'
+import { STAGE_COLORS, TECHNIQUES, getSymptomFlag } from '@/lib/matriai-data'
 import { getUser } from '@/lib/matriai-storage'
 
 // ─── BOX BREATHING ANIMATION ─────────────────────────────
@@ -79,6 +79,18 @@ export default function TechniquesPage() {
       .slice(0, 6)
   }, [stage, recentCheckIn])
 
+  // Symptom → specialist flag
+  const specialistFlag = useMemo(() => {
+    const symptoms = recentCheckIn?.symptoms || []
+    return getSymptomFlag(symptoms)
+  }, [recentCheckIn])
+
+  const SPECIALIST_LABELS: Record<string, { label: string; desc: string }> = {
+    gynaecologist: { label: 'Gynaecologist', desc: 'Based on your recent symptoms, a gynaecologist may be the right person to speak to.' },
+    general_physician: { label: 'General Physician', desc: 'Based on your recent symptoms, a general physician could help assess your physical health.' },
+    psychiatrist: { label: 'Psychiatrist or Psychologist', desc: 'Based on how you\'ve been feeling, speaking with a mental health professional may help.' },
+  }
+
   // Check for joint family
   const hasJointFamily = user?.culturalContext?.cq1 === 'With in-laws'
 
@@ -101,7 +113,19 @@ export default function TechniquesPage() {
         </p>
       </div>
 
-      {/* Techniques */}
+      {/* Specialist recommendation (from symptom flags) */}
+      {specialistFlag && SPECIALIST_LABELS[specialistFlag] && (
+        <div className="px-4 max-w-2xl mx-auto mb-2">
+          <div className="rounded-xl bg-primary/8 border border-primary/20 p-4">
+            <p className="text-xs font-semibold text-primary mb-1 uppercase tracking-wide">Recommended for you</p>
+            <p className="text-sm font-medium">{SPECIALIST_LABELS[specialistFlag].label}</p>
+            <p className="text-xs text-muted-foreground mt-1">{SPECIALIST_LABELS[specialistFlag].desc}</p>
+            <Link href="/doctors" className="inline-flex items-center gap-1 text-xs text-primary font-medium mt-2 hover:underline">
+              Find a specialist <Stethoscope className="h-3 w-3" />
+            </Link>
+          </div>
+        </div>
+      )}
       <div className="px-4 max-w-2xl mx-auto space-y-3">
         {displayTechniques.map(tech => (
           <Card key={tech.id} className="border-0 shadow-sm overflow-hidden">

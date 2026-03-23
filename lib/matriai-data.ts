@@ -248,7 +248,62 @@ export const APPETITE_MODIFIERS: Record<string, number> = {
 }
 
 // ─── PHYSICAL SYMPTOMS ──────────────────────────────────
-export const BASE_SYMPTOMS = ['Headache', 'Fatigue', 'Nausea', 'Back pain', 'Anxiety in body', 'Breast tenderness', 'Insomnia', 'Dizziness']
+export const BASE_SYMPTOMS = [
+  // Gynaecological
+  'Irregular bleeding',
+  'Pelvic pain',
+  'Unusual discharge',
+  'Breast lump / tenderness',
+  'Menstrual irregularity',
+  // General / GP
+  'Fever',
+  'Headache',
+  'Fatigue',
+  'Nausea',
+  'Body ache',
+  'Dizziness',
+  'Appetite loss',
+  // Psychiatric / psychological
+  'Persistent low mood',
+  'Panic attacks',
+  'Dissociation / detachment',
+  'Self-harm thoughts',
+  // General
+  'Insomnia',
+  'Back pain',
+  'Anxiety in body',
+]
+
+// Symptom → preferred specialist flag
+export const SYMPTOM_FLAG_RULES: Record<string, 'gynaecologist' | 'general_physician' | 'psychiatrist'> = {
+  'Irregular bleeding':      'gynaecologist',
+  'Pelvic pain':             'gynaecologist',
+  'Unusual discharge':       'gynaecologist',
+  'Breast lump / tenderness':'gynaecologist',
+  'Menstrual irregularity':  'gynaecologist',
+  'Fever':                   'general_physician',
+  'Headache':                'general_physician',
+  'Fatigue':                 'general_physician',
+  'Nausea':                  'general_physician',
+  'Body ache':               'general_physician',
+  'Dizziness':               'general_physician',
+  'Appetite loss':           'general_physician',
+  'Persistent low mood':     'psychiatrist',
+  'Panic attacks':           'psychiatrist',
+  'Dissociation / detachment':'psychiatrist',
+  'Self-harm thoughts':      'psychiatrist',
+}
+
+// Derive the top recommended specialist flag given a set of selected symptoms
+export function getSymptomFlag(symptoms: string[]): 'gynaecologist' | 'general_physician' | 'psychiatrist' | null {
+  const counts: Record<string, number> = {}
+  for (const s of symptoms) {
+    const flag = SYMPTOM_FLAG_RULES[s]
+    if (flag) counts[flag] = (counts[flag] || 0) + 1
+  }
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1])
+  return sorted.length > 0 ? (sorted[0][0] as 'gynaecologist' | 'general_physician' | 'psychiatrist') : null
+}
 
 export const STAGE_SYMPTOMS: Record<string, string[]> = {
   pregnancy:  ['Swelling', 'Heartburn', 'Shortness of breath', 'Pelvic pressure', 'Leg cramps'],
@@ -400,11 +455,19 @@ export const TECHNIQUES: Technique[] = [
 ]
 
 // ─── COUNSELORS ──────────────────────────────────────────
+export const SPECIALISATIONS = [
+  'Psychiatrist',
+  'Psychologist',
+  'Gynaecologist',
+  'General Physician',
+]
+
 export const COUNSELORS = [
   {
     name: 'Dr. Priya Nair',
     credentials: 'MSc Psychology (RCI Reg.)',
     specialisations: ['Postpartum', 'Perinatal grief'],
+    specialistFlag: 'psychiatrist' as const,
     languages: ['English', 'Malayalam'],
     initials: 'PN',
     available: 'Today',
@@ -413,6 +476,7 @@ export const COUNSELORS = [
     name: 'Dr. Ananya Sharma',
     credentials: 'MPhil Clinical Psychology',
     specialisations: ['Pregnancy anxiety', 'Menopause'],
+    specialistFlag: 'psychiatrist' as const,
     languages: ['English', 'Hindi'],
     initials: 'AS',
     available: 'Today',
@@ -421,8 +485,27 @@ export const COUNSELORS = [
     name: 'Ms. Lakshmi Iyer',
     credentials: 'MA Counselling Psychology',
     specialisations: ['Grief', 'Loss', 'Life transitions'],
+    specialistFlag: 'psychiatrist' as const,
     languages: ['English', 'Hindi', 'Malayalam'],
     initials: 'LI',
+    available: 'Tomorrow',
+  },
+  {
+    name: 'Dr. Meera Krishnan',
+    credentials: 'MBBS, MD (Obstetrics & Gynaecology)',
+    specialisations: ['Menstrual health', 'PCOS', 'Pelvic pain'],
+    specialistFlag: 'gynaecologist' as const,
+    languages: ['English', 'Tamil', 'Hindi'],
+    initials: 'MK',
+    available: 'Today',
+  },
+  {
+    name: 'Dr. Sunita Rajan',
+    credentials: 'MBBS, MD (General Medicine)',
+    specialisations: ['Women\'s general health', 'Fatigue', 'Chronic symptoms'],
+    specialistFlag: 'general_physician' as const,
+    languages: ['English', 'Hindi'],
+    initials: 'SR',
     available: 'Tomorrow',
   },
 ]

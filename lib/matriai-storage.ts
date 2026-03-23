@@ -1,4 +1,5 @@
 import { MOOD_TILES, SLEEP_MODIFIERS, APPETITE_MODIFIERS, STAGE_SPECIFIC_MODIFIERS, AFFIRMATIONS } from './matriai-data'
+import { createClient } from './supabase/client'
 
 // ─── TYPES ───────────────────────────────────────────────
 export interface CheckInData {
@@ -71,6 +72,121 @@ export function createNewUser(): MatriAIUser {
     analytics: { lastCheckIn: null, streak: 0 },
     crisisAcknowledgements: [],
     onboardingComplete: false,
+  }
+}
+
+// ─── DB SYNC ──────────────────────────────────────────────
+/** Hydrate localStorage from Supabase on login. Call after confirming auth. */
+export async function syncUserFromDB(): Promise<void> {
+  if (typeof window === 'undefined') return
+  try {
+    const supabase = createClient()
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+    if (!authUser) return
+
+    // Fetch profile
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', authUser.id)
+      .single()
+
+    // Fetch check-ins (last 90 days)
+    const since = new Date()
+    since.setDate(since.getDate() - 90)
+    const { data: dbCheckins } = await supabase
+      .from('user_checkins')
+      .select('*')
+      .eq('user_id', authUser.id)
+      .gte('date', since.toISOString().split('T')[0])
+      .order('date', { ascending: true })
+
+    // Fetch screenings
+    const { data: dbScreenings } = await supabase
+      .from('user_screenings')
+      .select('*')
+      .eq('user_id', authUser.id)
+      .order('date', { ascending: true })
+
+    // Build local user from DB data
+    let local = getUser() || createNewUser()
+    if (profile) {
+      local.lifeStage = profile.life_stage || local.lifeStage
+      local.pseudonym = profile.full_name?.split(' ')[0] || local.pseudonym
+      local.onboardingComplete = profile.onboarding_complete || local.onboardingComplete
+      if (profile.cultural_context) local.culturalContext = profile.cultural_context
+      if (profile.conditions) local.conditions = profile.conditions
+      if (profile.age) local.age = profile.age
+    }
+    if (dbCheckins && dbCheckins.length > 0) {
+      local.checkIns = dbCheckins.map((c: Record<string, unknown>) => ({
+        date: c.date as string,
+        mood: c.mood as string,
+        factors: (c.factors as string[]) || [],
+        sleep: c.sleep as string,
+        appetite: c.appetite as string,
+        symptoms: (c.symptoms as string[]) || [],
+        stageAnswer: (c.stage_answer as string) || '',
+        notes: (c.notes as string) || '',
+        computedScore: c.computed_score as number,
+        severity: c.severity as 'low' | 'moderate' | 'severe',
+      }))
+    }
+    if (dbScreenings && dbScreenings.length > 0) {
+      local.screenings = dbScreenings.map((s: Record<string, unknown>) => ({
+        date: s.date as string,
+        type: s.type as 'EPDS' | 'PHQ4',
+        score: s.score as number,
+        severity: s.severity as 'low' | 'moderate' | 'severe',
+        answers: (s.answers as number[]) || [],
+      }))
+    }
+    saveUser(local)
+  } catch (e) {
+    console.error('syncUserFromDB error:', e)
+  }
+}
+
+/** Persist a check-in to Supabase (full data). */
+export async function saveCheckInToDB(checkIn: CheckInData): Promise<void> {
+  try {
+    const supabase = createClient()
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+    if (!authUser) return
+    await supabase.from('user_checkins').upsert({
+      user_id: authUser.id,
+      date: checkIn.date,
+      mood: checkIn.mood,
+      factors: checkIn.factors,
+      sleep: checkIn.sleep,
+      appetite: checkIn.appetite,
+      symptoms: checkIn.symptoms,
+      stage_answer: checkIn.stageAnswer,
+      notes: checkIn.notes,
+      computed_score: checkIn.computedScore,
+      severity: checkIn.severity,
+    }, { onConflict: 'user_id,date' })
+  } catch (e) {
+    console.error('saveCheckInToDB error:', e)
+  }
+}
+
+/** Persist a screening result to Supabase. */
+export async function saveScreeningToDB(entry: ScreeningEntry): Promise<void> {
+  try {
+    const supabase = createClient()
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+    if (!authUser) return
+    await supabase.from('user_screenings').insert({
+      user_id: authUser.id,
+      date: entry.date,
+      type: entry.type,
+      score: entry.score,
+      severity: entry.severity,
+      answers: entry.answers,
+    })
+  } catch (e) {
+    console.error('saveScreeningToDB error:', e)
   }
 }
 

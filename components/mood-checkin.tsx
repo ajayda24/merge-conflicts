@@ -17,6 +17,7 @@ import {
   getUser, saveUser,
   computeCheckInScore,
   getRandomAffirmation,
+  saveCheckInToDB,
   type CheckInData,
 } from '@/lib/matriai-storage'
 
@@ -133,7 +134,10 @@ export function MoodCheckin({ onComplete }: MoodCheckinProps) {
     setResult({ score, severity })
     setStep(6)
 
-    // Also save to Supabase
+    // Persist to Supabase (full data — DB is source of truth)
+    saveCheckInToDB(checkIn)
+
+    // Also save simplified record to legacy 'checkins' table
     try {
       const supabase = createClient()
       const { data: { user: authUser } } = await supabase.auth.getUser()
@@ -448,22 +452,22 @@ export function MoodCheckin({ onComplete }: MoodCheckinProps) {
 
               {result.severity === 'severe' && (
                 <div className="text-center space-y-3">
-                  <div className="mx-auto w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center">
-                    <svg viewBox="0 0 24 24" className="w-7 h-7 text-red-500" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z" /></svg>
+                  <div className="mx-auto w-14 h-14 rounded-full bg-pink-500/10 flex items-center justify-center">
+                    <svg viewBox="0 0 24 24" className="w-7 h-7 text-pink-500" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z" /></svg>
                   </div>
-                  <h3 className="font-serif text-xl text-red-600">You don&apos;t have to carry this alone</h3>
+                  <h3 className="font-serif text-xl text-pink-600 dark:text-pink-400">You don&apos;t have to carry this alone</h3>
                   <p className="text-sm text-muted-foreground">
                     Based on how you&apos;re feeling, talking to someone could really help right now.
                   </p>
                   <div className="space-y-2">
                     {CRISIS_RESOURCES.map(r => (
                       <a key={r.number} href={`tel:${r.number.replace(/-/g, '')}`}
-                        className="flex items-center justify-between p-3 rounded-xl bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors">
+                        className="flex items-center justify-between p-3 rounded-xl bg-pink-50 dark:bg-pink-500/10 hover:bg-pink-100 dark:hover:bg-pink-500/20 transition-colors">
                         <div className="text-left">
                           <p className="text-xs font-medium">{r.name}</p>
                           <p className="text-sm font-mono">{r.number}</p>
                         </div>
-                        <Phone className="h-4 w-4 text-red-500" />
+                        <Phone className="h-4 w-4 text-pink-500" />
                       </a>
                     ))}
                   </div>
