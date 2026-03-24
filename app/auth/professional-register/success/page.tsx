@@ -9,7 +9,7 @@ export default function ProfessionalRegisterSuccessPage() {
       <div className="w-full max-w-md text-center">
         <div className="flex items-center justify-center gap-2 text-primary mb-8">
           <Heart className="h-8 w-8 fill-current" />
-          <span className="font-serif text-2xl font-medium">MatriAI</span>
+          <span className="font-serif text-2xl font-medium">MatriLine</span>
         </div>
 
         <Card className="border-0 shadow-lg">
@@ -46,7 +46,7 @@ export default function ProfessionalRegisterSuccessPage() {
             </div>
 
             <p className="text-xs text-muted-foreground">
-              Once verified, your profile will appear in the MatriAI
+              Once verified, your profile will appear in the MatriLine
               professional directory, making you discoverable to patients.
             </p>
 

@@ -75,7 +75,7 @@ export default function SignUpPage() {
         <div className="flex flex-col items-center gap-6">
           <div className="flex items-center gap-2 text-primary">
             <Heart className="h-8 w-8 fill-current" />
-            <span className="font-serif text-2xl font-medium">MatriAI</span>
+            <span className="font-serif text-2xl font-medium">MatriLine</span>
           </div>
 
           <Card className="w-full shadow-lg border-0">

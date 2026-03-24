@@ -10,15 +10,17 @@ export default function AuthErrorPage() {
         <div className="flex flex-col items-center gap-6">
           <div className="flex items-center gap-2 text-primary">
             <Heart className="h-8 w-8 fill-current" />
-            <span className="font-serif text-2xl font-medium">MatriAI</span>
+            <span className="font-serif text-2xl font-medium">MatriLine</span>
           </div>
-          
+
           <Card className="w-full shadow-lg border-0">
             <CardHeader className="text-center">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
                 <AlertCircle className="h-8 w-8 text-destructive" />
               </div>
-              <CardTitle className="font-serif text-2xl">Something went wrong</CardTitle>
+              <CardTitle className="font-serif text-2xl">
+                Something went wrong
+              </CardTitle>
               <CardDescription className="text-base">
                 There was an error during authentication. Please try again.
               </CardDescription>
@@ -35,5 +37,5 @@ export default function AuthErrorPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -11,7 +11,7 @@ export interface Product {
 export const PRODUCTS: Product[] = [
   {
     id: "matriai-premium",
-    name: "MatriAI Premium",
+    name: "MatriLine Premium",
     description:
       "Unlimited video consultations with verified doctors and counsellors",
     originalPriceInPaise: 20000, // ₹200

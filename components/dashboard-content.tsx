@@ -184,7 +184,7 @@ export function DashboardContent({
     const html = `<!DOCTYPE html>
 <html>
 <head>
-  <title>MatriAI Report — ${dateStr}</title>
+  <title>MatriLine Report — ${dateStr}</title>
   <style>
     @page { size: A4; margin: 20mm 15mm; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #1f2937; font-size: 11px; }
@@ -210,8 +210,8 @@ export function DashboardContent({
 <body>
   <div class="header">
     <div>
-      <h1>MatriAI Wellbeing Report</h1>
-      <div class="meta">Patient: ${userName} &nbsp;·&nbsp; Life stage: ${stage} &nbsp;·&nbsp; Generated: ${today.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+      <h1>MatriLine Wellbeing Report</h1>
+      <div class="meta">Patient: ${userName} &nbsp;·&nbsp; Life stage: ${stage} &nbsp;·&nbsp; Generated: ${today.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</div>
     </div>
     <div class="header-right">
       <div>For healthcare professional use</div>
@@ -224,35 +224,53 @@ export function DashboardContent({
   ${avgScore > 0 ? `<p style="text-align:center; font-size:10px; margin-top:6px; color:#6b7280">7-day average score: <strong style="color:#be185d">${avgScore}/100</strong></p>` : '<p style="text-align:center; font-size:10px; color:#9ca3af">No check-ins recorded this week</p>'}
 
   <h2>Daily Check-In Log</h2>
-  ${recentCheckIns.length > 0 ? `
+  ${
+    recentCheckIns.length > 0
+      ? `
   <table>
     <thead><tr><th>Date</th><th>Mood</th><th>Score</th><th>Sleep</th><th>Symptoms</th><th>Notes</th></tr></thead>
     <tbody>${checkInRows}</tbody>
-  </table>` : '<p style="color:#9ca3af; font-size:10px">No check-ins this week.</p>'}
+  </table>`
+      : '<p style="color:#9ca3af; font-size:10px">No check-ins this week.</p>'
+  }
 
-  ${latestScreen ? `
-  <h2>Wellbeing Screening Result (${latestScreen.type === 'EPDS' ? 'EPDS' : 'PHQ-4'})</h2>
+  ${
+    latestScreen
+      ? `
+  <h2>Wellbeing Screening Result (${latestScreen.type === "EPDS" ? "EPDS" : "PHQ-4"})</h2>
   <div class="screening-box">
     <div>
       <span class="screening-score">${latestScreen.score}</span>
-      <span style="color:#6b7280; font-size: 11px">/ ${latestScreen.type === 'EPDS' ? '30' : '12'}</span>
+      <span style="color:#6b7280; font-size: 11px">/ ${latestScreen.type === "EPDS" ? "30" : "12"}</span>
       <span class="tag tag-${latestScreen.severity}">${latestScreen.severity.toUpperCase()}</span>
     </div>
     <div style="margin-top:6px; font-size:10px; color:#4b5563">Date taken: ${latestScreen.date} &nbsp;·&nbsp; Type: ${latestScreen.type}</div>
-  </div>` : ''}
+  </div>`
+      : ""
+  }
 
-  ${localUser.culturalContext && Object.keys(localUser.culturalContext).length > 0 ? `
+  ${
+    localUser.culturalContext &&
+    Object.keys(localUser.culturalContext).length > 0
+      ? `
   <h2>Cultural Context Summary</h2>
   <div class="cultural-box">
-    ${Object.entries(localUser.culturalContext).map(([k, v]) => `<div><strong>${k}:</strong> ${Array.isArray(v) ? v.join(', ') : v}</div>`).join('')}
-  </div>` : ''}
+    ${Object.entries(localUser.culturalContext)
+      .map(
+        ([k, v]) =>
+          `<div><strong>${k}:</strong> ${Array.isArray(v) ? v.join(", ") : v}</div>`,
+      )
+      .join("")}
+  </div>`
+      : ""
+  }
 
   <div class="disclaimer">
     This report is a digital self-report tool and is not a clinical diagnosis. Scores should be interpreted by a qualified healthcare professional in context.
-    MatriAI is not a substitute for professional mental health care.
+    MatriLine is not a substitute for professional mental health care.
   </div>
 </body>
-</html>`
+</html>`;
 
     const win = window.open('', '_blank')
     if (win) {

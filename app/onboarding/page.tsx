@@ -254,16 +254,20 @@ export default function OnboardingPage() {
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 text-primary mb-6">
           <Heart className="h-7 w-7 fill-current" />
-          <span className="font-serif text-xl font-medium">MatriAI</span>
+          <span className="font-serif text-xl font-medium">MatriLine</span>
         </div>
 
         {/* ══════════════ SCREEN 1: AGE & CONDITIONS ══════════════ */}
-        {screen === 'age' && (
+        {screen === "age" && (
           <Card className="shadow-lg border-0">
             <CardContent className="pt-6 space-y-6">
               <div className="text-center">
-                <h2 className="font-serif text-2xl mb-1">Tell us about yourself</h2>
-                <p className="text-sm text-muted-foreground">This helps us personalise your experience</p>
+                <h2 className="font-serif text-2xl mb-1">
+                  Tell us about yourself
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  This helps us personalise your experience
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -271,25 +275,30 @@ export default function OnboardingPage() {
                 <input
                   type="number"
                   value={age}
-                  onChange={e => setAge(e.target.value)}
+                  onChange={(e) => setAge(e.target.value)}
                   placeholder="Enter your age"
-                  min={13} max={100}
+                  min={13}
+                  max={100}
                   className="w-full h-12 px-4 rounded-xl border border-input bg-background text-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Do you have any of these conditions?</label>
-                <p className="text-xs text-muted-foreground">Select all that apply</p>
+                <label className="text-sm font-medium">
+                  Do you have any of these conditions?
+                </label>
+                <p className="text-xs text-muted-foreground">
+                  Select all that apply
+                </p>
                 <div className="grid grid-cols-2 gap-2">
-                  {CONDITIONS.map(c => (
+                  {CONDITIONS.map((c) => (
                     <button
                       key={c.value}
                       onClick={() => toggleCondition(c.value)}
                       className={`px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all text-left active:scale-[0.97] ${
                         conditions.includes(c.value)
-                          ? 'border-primary bg-primary/5 text-primary'
-                          : 'border-border hover:border-primary/50'
+                          ? "border-primary bg-primary/5 text-primary"
+                          : "border-border hover:border-primary/50"
                       }`}
                     >
                       {c.label}
@@ -299,7 +308,7 @@ export default function OnboardingPage() {
               </div>
 
               <Button
-                onClick={() => setScreen('lifeStage')}
+                onClick={() => setScreen("lifeStage")}
                 disabled={!age || conditions.length === 0}
                 className="w-full gap-2"
               >
@@ -310,18 +319,22 @@ export default function OnboardingPage() {
         )}
 
         {/* ══════════════ SCREEN 2: LIFE STAGE ══════════════ */}
-        {screen === 'lifeStage' && (
+        {screen === "lifeStage" && (
           <Card className="shadow-lg border-0">
             <CardContent className="pt-6 space-y-6">
               <div className="text-center">
-                <h2 className="font-serif text-2xl mb-1">What brings you here today?</h2>
-                <p className="text-sm text-muted-foreground">You can always change this later</p>
+                <h2 className="font-serif text-2xl mb-1">
+                  What brings you here today?
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  You can always change this later
+                </p>
               </div>
 
               <div className="space-y-3">
-                {LIFE_STAGES.map(s => {
-                  const selected = lifeStage === s.value
-                  const colors = STAGE_COLORS[s.value]
+                {LIFE_STAGES.map((s) => {
+                  const selected = lifeStage === s.value;
+                  const colors = STAGE_COLORS[s.value];
                   return (
                     <button
                       key={s.value}
@@ -329,14 +342,18 @@ export default function OnboardingPage() {
                       className={`w-full flex items-stretch rounded-xl border-2 transition-all text-left active:scale-[0.97] overflow-hidden ${
                         selected
                           ? `${colors.border} ${colors.light}`
-                          : 'border-border hover:border-primary/30'
+                          : "border-border hover:border-primary/30"
                       }`}
                     >
                       {/* Left accent bar */}
-                      <div className={`w-1.5 shrink-0 transition-colors ${selected ? colors.bg : 'bg-transparent'}`} />
+                      <div
+                        className={`w-1.5 shrink-0 transition-colors ${selected ? colors.bg : "bg-transparent"}`}
+                      />
                       <div className="flex-1 px-4 py-3.5">
                         <p className="font-medium text-[15px]">{s.label}</p>
-                        <p className="text-[13px] text-muted-foreground mt-0.5">{s.subtitle}</p>
+                        <p className="text-[13px] text-muted-foreground mt-0.5">
+                          {s.subtitle}
+                        </p>
                       </div>
                       {selected && (
                         <div className="flex items-center pr-4">
@@ -344,18 +361,22 @@ export default function OnboardingPage() {
                         </div>
                       )}
                     </button>
-                  )
+                  );
                 })}
               </div>
 
               <div className="flex gap-3">
-                <Button variant="outline" onClick={() => setScreen('age')} className="gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setScreen("age")}
+                  className="gap-2"
+                >
                   <ArrowLeft className="h-4 w-4" /> Back
                 </Button>
                 <Button
                   onClick={() => {
-                    if (!isEPDS && lifeStage) setScreen('screeningIntro')
-                    else setScreen('screening')
+                    if (!isEPDS && lifeStage) setScreen("screeningIntro");
+                    else setScreen("screening");
                   }}
                   className="flex-1 gap-2"
                   disabled={!lifeStage}
@@ -368,18 +389,25 @@ export default function OnboardingPage() {
         )}
 
         {/* ══════════════ SCREENING INTRO (PHQ-4 only) ══════════════ */}
-        {screen === 'screeningIntro' && (
+        {screen === "screeningIntro" && (
           <Card className="shadow-lg border-0">
             <CardContent className="pt-6 space-y-6 text-center">
-              <div className="mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-full" style={{ backgroundColor: stageColor?.accent + '20' }}>
-                <Heart className="h-8 w-8" style={{ color: stageColor?.accent }} />
+              <div
+                className="mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-full"
+                style={{ backgroundColor: stageColor?.accent + "20" }}
+              >
+                <Heart
+                  className="h-8 w-8"
+                  style={{ color: stageColor?.accent }}
+                />
               </div>
               <h2 className="font-serif text-2xl">A few quick questions</h2>
               <p className="text-muted-foreground">
                 These help us understand how you&apos;ve been feeling.
-                <br />Takes under 2 minutes.
+                <br />
+                Takes under 2 minutes.
               </p>
-              <Button onClick={() => setScreen('screening')} className="gap-2">
+              <Button onClick={() => setScreen("screening")} className="gap-2">
                 Begin <ArrowRight className="h-4 w-4" />
               </Button>
             </CardContent>
@@ -387,16 +415,21 @@ export default function OnboardingPage() {
         )}
 
         {/* ══════════════ SCREENING QUESTIONS ══════════════ */}
-        {screen === 'screening' && (
+        {screen === "screening" && (
           <Card className="shadow-lg border-0">
             <CardContent className="pt-6 space-y-5">
               {/* Progress */}
               <div className="space-y-2">
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>How you&apos;ve been feeling</span>
-                  <span>{screeningIdx + 1} / {questions.length}</span>
+                  <span>
+                    {screeningIdx + 1} / {questions.length}
+                  </span>
                 </div>
-                <Progress value={((screeningIdx + 1) / questions.length) * 100} className="h-2" />
+                <Progress
+                  value={((screeningIdx + 1) / questions.length) * 100}
+                  className="h-2"
+                />
               </div>
 
               {/* Question */}
@@ -407,7 +440,8 @@ export default function OnboardingPage() {
               {/* EPDS Q10 warning */}
               {isEPDS && screeningIdx === 9 && (
                 <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
-                  This question is sensitive. Your answer is private and helps us connect you with the right support.
+                  This question is sensitive. Your answer is private and helps
+                  us connect you with the right support.
                 </p>
               )}
 
@@ -419,8 +453,8 @@ export default function OnboardingPage() {
                     onClick={() => handleScreeningAnswer(opt.score)}
                     className={`w-full text-left px-4 py-3.5 rounded-xl border-2 text-sm font-medium transition-all active:scale-[0.97] ${
                       screeningAnswers[screeningIdx] === opt.score
-                        ? 'border-primary bg-primary/5 text-primary'
-                        : 'border-border hover:border-primary/30 hover:bg-secondary/50'
+                        ? "border-primary bg-primary/5 text-primary"
+                        : "border-border hover:border-primary/30 hover:bg-secondary/50"
                     }`}
                   >
                     {opt.text}
@@ -444,7 +478,7 @@ export default function OnboardingPage() {
         )}
 
         {/* ══════════════ SCREENING RESULT ══════════════ */}
-        {screen === 'screeningResult' && screeningResult && (
+        {screen === "screeningResult" && screeningResult && (
           <Card className="shadow-lg border-0">
             <CardContent className="pt-8 pb-8 space-y-6 text-center">
               <ScoreRing
@@ -455,14 +489,20 @@ export default function OnboardingPage() {
 
               <div>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                  {getSeverityText(screeningResult.severity, screeningResult.type)}
+                  {getSeverityText(
+                    screeningResult.severity,
+                    screeningResult.type,
+                  )}
                 </p>
                 <p className="text-xs text-muted-foreground/70 italic">
                   This is not a diagnosis. It helps us support you better.
                 </p>
               </div>
 
-              <Button onClick={() => setScreen('culturalIntro')} className="gap-2">
+              <Button
+                onClick={() => setScreen("culturalIntro")}
+                className="gap-2"
+              >
                 Continue to next step <ArrowRight className="h-4 w-4" />
               </Button>
             </CardContent>
@@ -470,17 +510,20 @@ export default function OnboardingPage() {
         )}
 
         {/* ══════════════ CULTURAL CONTEXT INTRO ══════════════ */}
-        {screen === 'culturalIntro' && (
+        {screen === "culturalIntro" && (
           <Card className="shadow-lg border-0">
             <CardContent className="pt-6 space-y-6 text-center">
               <div className="mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
                 <Heart className="h-8 w-8 text-primary" />
               </div>
-              <h2 className="font-serif text-xl">Just 5 more quick questions</h2>
+              <h2 className="font-serif text-xl">
+                Just 5 more quick questions
+              </h2>
               <p className="text-muted-foreground text-sm">
-                This helps your companion understand your world, not just your symptoms.
+                This helps your companion understand your world, not just your
+                symptoms.
               </p>
-              <Button onClick={() => setScreen('cultural')} className="gap-2">
+              <Button onClick={() => setScreen("cultural")} className="gap-2">
                 Continue <ArrowRight className="h-4 w-4" />
               </Button>
             </CardContent>
@@ -488,16 +531,21 @@ export default function OnboardingPage() {
         )}
 
         {/* ══════════════ CULTURAL CONTEXT QUESTIONS ══════════════ */}
-        {screen === 'cultural' && culturalQs[culturalIdx] && (
+        {screen === "cultural" && culturalQs[culturalIdx] && (
           <Card className="shadow-lg border-0">
             <CardContent className="pt-6 space-y-5">
               {/* Progress */}
               <div className="space-y-2">
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>About you</span>
-                  <span>{culturalIdx + 1} / {culturalQs.length}</span>
+                  <span>
+                    {culturalIdx + 1} / {culturalQs.length}
+                  </span>
                 </div>
-                <Progress value={((culturalIdx + 1) / culturalQs.length) * 100} className="h-2" />
+                <Progress
+                  value={((culturalIdx + 1) / culturalQs.length) * 100}
+                  className="h-2"
+                />
               </div>
 
               {/* Question */}
@@ -505,18 +553,24 @@ export default function OnboardingPage() {
                 {culturalQs[culturalIdx].question}
               </h3>
               {culturalQs[culturalIdx].multiSelect && (
-                <p className="text-xs text-muted-foreground">Select all that apply</p>
+                <p className="text-xs text-muted-foreground">
+                  Select all that apply
+                </p>
               )}
 
               {/* Options */}
-              <div className={`grid gap-2 ${culturalQs[culturalIdx].cols === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                {culturalQs[culturalIdx].options.map(opt => {
-                  const cq = culturalQs[culturalIdx]
-                  let selected = false
+              <div
+                className={`grid gap-2 ${culturalQs[culturalIdx].cols === 2 ? "grid-cols-2" : "grid-cols-1"}`}
+              >
+                {culturalQs[culturalIdx].options.map((opt) => {
+                  const cq = culturalQs[culturalIdx];
+                  let selected = false;
                   if (cq.multiSelect) {
-                    selected = ((culturalAnswers[cq.key] as string[]) || []).includes(opt)
+                    selected = (
+                      (culturalAnswers[cq.key] as string[]) || []
+                    ).includes(opt);
                   } else {
-                    selected = culturalAnswers[cq.key] === opt
+                    selected = culturalAnswers[cq.key] === opt;
                   }
 
                   return (
@@ -525,13 +579,13 @@ export default function OnboardingPage() {
                       onClick={() => handleCulturalAnswer(opt)}
                       className={`px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all text-left active:scale-[0.97] ${
                         selected
-                          ? `${stageColor?.border || 'border-primary'} ${stageColor?.light || 'bg-primary/5'}`
-                          : 'border-border hover:border-primary/30'
+                          ? `${stageColor?.border || "border-primary"} ${stageColor?.light || "bg-primary/5"}`
+                          : "border-border hover:border-primary/30"
                       }`}
                     >
                       {opt}
                     </button>
-                  )
+                  );
                 })}
               </div>
 
@@ -540,8 +594,8 @@ export default function OnboardingPage() {
                 <Button
                   variant="outline"
                   onClick={() => {
-                    if (culturalIdx > 0) setCulturalIdx(culturalIdx - 1)
-                    else setScreen('screeningResult')
+                    if (culturalIdx > 0) setCulturalIdx(culturalIdx - 1);
+                    else setScreen("screeningResult");
                   }}
                   className="gap-1"
                 >
@@ -550,15 +604,19 @@ export default function OnboardingPage() {
                 <Button
                   onClick={() => {
                     if (culturalIdx < culturalQs.length - 1) {
-                      setCulturalIdx(culturalIdx + 1)
+                      setCulturalIdx(culturalIdx + 1);
                     } else {
-                      handleComplete()
+                      handleComplete();
                     }
                   }}
                   disabled={!isCulturalAnswered() || isLoading}
                   className="flex-1 gap-2"
                 >
-                  {isLoading ? 'Setting up...' : culturalIdx < culturalQs.length - 1 ? 'Next' : 'Finish'}
+                  {isLoading
+                    ? "Setting up..."
+                    : culturalIdx < culturalQs.length - 1
+                      ? "Next"
+                      : "Finish"}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -568,24 +626,28 @@ export default function OnboardingPage() {
 
         {/* Step indicators */}
         <div className="flex justify-center gap-2 mt-6">
-          {['age', 'lifeStage', 'screening', 'cultural'].map((s, i) => {
-            const stages = ['age', 'lifeStage', 'screening', 'cultural']
+          {["age", "lifeStage", "screening", "cultural"].map((s, i) => {
+            const stages = ["age", "lifeStage", "screening", "cultural"];
             const currentIdx = stages.indexOf(
-              screen === 'screeningIntro' || screen === 'screening' ? 'screening' :
-              screen === 'screeningResult' || screen === 'culturalIntro' ? 'cultural' :
-              screen === 'cultural' ? 'cultural' : screen as string
-            )
+              screen === "screeningIntro" || screen === "screening"
+                ? "screening"
+                : screen === "screeningResult" || screen === "culturalIntro"
+                  ? "cultural"
+                  : screen === "cultural"
+                    ? "cultural"
+                    : (screen as string),
+            );
             return (
               <div
                 key={s}
                 className={`h-2 w-10 rounded-full transition-colors ${
-                  i <= currentIdx ? 'bg-primary' : 'bg-border'
+                  i <= currentIdx ? "bg-primary" : "bg-border"
                 }`}
               />
-            )
+            );
           })}
         </div>
       </div>
     </div>
-  )
+  );
 }

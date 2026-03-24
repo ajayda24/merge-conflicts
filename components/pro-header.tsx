@@ -41,7 +41,7 @@ export function ProHeader() {
           className="flex items-center gap-2 text-primary"
         >
           <Heart className="h-6 w-6 fill-current" />
-          <span className="font-serif text-xl font-medium">MatriAI</span>
+          <span className="font-serif text-xl font-medium">MatriLine</span>
           <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">
             Pro
           </span>

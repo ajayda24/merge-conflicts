@@ -175,7 +175,7 @@ export default function ProfessionalRegisterPage() {
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 text-primary mb-8">
           <Heart className="h-8 w-8 fill-current" />
-          <span className="font-serif text-2xl font-medium">MatriAI</span>
+          <span className="font-serif text-2xl font-medium">MatriLine</span>
         </div>
 
         {/* Step indicator */}
@@ -225,7 +225,7 @@ export default function ProfessionalRegisterPage() {
                   Create your account
                 </CardTitle>
                 <CardDescription>
-                  Register as a mental health professional on MatriAI
+                  Register as a mental health professional on MatriLine
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">

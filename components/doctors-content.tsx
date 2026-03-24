@@ -164,7 +164,7 @@ export function DoctorsContent({
                 Video calls are a Premium feature
               </p>
               <p className="text-muted-foreground text-xs mt-0.5">
-                Upgrade to MatriAI Premium to start 1-to-1 video consultations
+                Upgrade to MatriLine Premium to start 1-to-1 video consultations
                 with verified doctors. Currently{" "}
                 <span className="line-through text-muted-foreground/70">
                   ₹200
@@ -220,7 +220,7 @@ export function DoctorsContent({
               No professionals registered yet
             </h3>
             <p className="text-muted-foreground text-sm mb-4">
-              Be the first to join the MatriAI professional directory.
+              Be the first to join the MatriLine professional directory.
             </p>
             <Button asChild>
               <Link href="/auth/professional-register">

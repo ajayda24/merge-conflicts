@@ -44,7 +44,7 @@ export function AppHeader() {
           className="flex items-center gap-2 text-primary"
         >
           <Heart className="h-6 w-6 fill-current" />
-          <span className="font-serif text-xl font-medium">MatriAI</span>
+          <span className="font-serif text-xl font-medium">MatriLine</span>
         </Link>
 
         {/* Desktop Navigation */}

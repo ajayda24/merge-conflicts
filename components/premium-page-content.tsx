@@ -68,7 +68,7 @@ export function PremiumPageContent({ isPremium, product, userName }: Props) {
             className="flex items-center gap-2 text-primary"
           >
             <Heart className="h-5 w-5 fill-current" />
-            <span className="font-serif text-lg font-medium">MatriAI</span>
+            <span className="font-serif text-lg font-medium">MatriLine</span>
           </Link>
           <div className="flex items-center gap-3">
             <ThemeToggle />
@@ -94,7 +94,7 @@ export function PremiumPageContent({ isPremium, product, userName }: Props) {
                 You are already Premium!
               </h1>
               <p className="text-muted-foreground">
-                You have full access to all MatriAI features including video
+                You have full access to all MatriLine features including video
                 consultations.
               </p>
             </div>
@@ -152,7 +152,7 @@ export function PremiumPageContent({ isPremium, product, userName }: Props) {
                 {/* Badge */}
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-muted-foreground">
-                    MatriAI Premium
+                    MatriLine Premium
                   </span>
                   <Badge
                     variant="secondary"

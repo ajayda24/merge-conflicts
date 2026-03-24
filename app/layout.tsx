@@ -8,27 +8,28 @@ const _dmSans = DM_Sans({ subsets: ["latin"], variable: '--font-sans' });
 const _dmSerif = DM_Serif_Display({ subsets: ["latin"], weight: "400", variable: '--font-serif' });
 
 export const metadata: Metadata = {
-  title: 'MatriAI - Your Mental Health Companion',
-  description: 'AI-powered mental wellness platform designed for women. Track your mood, connect with community, and access professional support.',
-  generator: 'v0.app',
+  title: "MatriLine - Your Mental Health Companion",
+  description:
+    "AI-powered mental wellness platform designed for women. Track your mood, connect with community, and access professional support.",
+
   icons: {
     icon: [
       {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
+        url: "/heart.png",
+        media: "(prefers-color-scheme: light)",
       },
       {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
+        url: "/heart.png",
+        media: "(prefers-color-scheme: dark)",
       },
       {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
+        url: "/heart.png",
+        type: "image/svg+xml",
       },
     ],
-    apple: '/apple-icon.png',
+    apple: "/heart.png",
   },
-}
+};
 
 export default function RootLayout({
   children,

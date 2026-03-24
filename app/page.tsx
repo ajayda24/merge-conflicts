@@ -20,7 +20,7 @@ export default function HomePage() {
         <nav className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-primary">
             <Heart className="h-7 w-7 fill-current" />
-            <span className="font-serif text-xl font-medium">MatriAI</span>
+            <span className="font-serif text-xl font-medium">MatriLine</span>
           </Link>
           <div className="flex items-center gap-2">
             <ThemeToggle />
@@ -46,7 +46,7 @@ export default function HomePage() {
               Your compassionate companion for {"women's"} mental health
             </h1>
             <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
-              MatriAI combines AI technology with empathy to support your
+              MatriLine combines AI technology with empathy to support your
               emotional wellbeing. Track your mood, connect with community, and
               access professional help - all in one safe space.
             </p>
@@ -70,7 +70,7 @@ export default function HomePage() {
         <section className="  px-4 py-16">
           <div className="text-center mb-12">
             <h2 className="font-serif text-3xl font-medium">
-              How MatriAI Supports You
+              How MatriLine Supports You
             </h2>
             <p className="text-muted-foreground mt-2">
               Four pillars of your wellness journey
@@ -147,7 +147,7 @@ export default function HomePage() {
                 Your Privacy Matters
               </h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                MatriAI is built with your privacy at its core. Your
+                MatriLine is built with your privacy at its core. Your
                 conversations are private, your data is secure, and you always
                 have control over what you share. We never sell your
                 information.
@@ -192,7 +192,7 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Heart className="h-5 w-5 fill-current text-primary" />
-              <span className="font-serif">MatriAI</span>
+              <span className="font-serif">MatriLine</span>
             </div>
             {/* <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <Link
