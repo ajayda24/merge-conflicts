@@ -1,4 +1,5 @@
 import {
+  generateText,
   consumeStream,
   convertToModelMessages,
   streamText,
@@ -6,6 +7,7 @@ import {
 } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
 
 const openrouter = createOpenAI({
   baseURL: "https://openrouter.ai/api/v1",
@@ -14,35 +16,53 @@ const openrouter = createOpenAI({
 
 export const maxDuration = 30;
 
-const BASE_PROMPT = `You are Matri, a warm, empathetic AI wellness companion designed specifically for women's mental health. Your communication style is:
+// ─── TRIAGE PROMPT ─────────────────────────────────────────
+const TRIAGE_PROMPT = `You are a mental health triage classifier. Given the user's latest message (and optional conversation history), classify the severity level.
 
-- Warm and nurturing, like a supportive friend
-- Non-judgmental and validating of feelings
-- Encouraging without being preachy
-- Culturally sensitive and inclusive
-- Focused on active listening and reflection
+LEVELS:
+- "normal": Everyday stress, curiosity, general conversation, mild worries, self-care questions, technique requests (breathing, meditation). No red flags.
+- "bad": Sustained emotional distress lasting days/weeks, insomnia, persistent anxiety, ongoing sadness, feeling stuck, moderate symptoms that could benefit from peer support but are not immediately dangerous.
+- "severe": Active self-harm thoughts, suicidal ideation, severe panic attacks, mentions of abuse/violence, extreme hopelessness, mentions of substance abuse as coping, or clear need for medical/psychiatric intervention.
 
-Key behaviors:
-1. Always acknowledge the user's feelings first before offering advice
-2. Use gentle, supportive language
-3. Offer practical wellness tips when appropriate
-4. Encourage professional help when detecting signs of serious distress
-5. Celebrate small wins and progress
-6. Be mindful of life stage-specific challenges (motherhood, menopause, career stress, etc.)
+Also extract:
+- "topics": 1-3 lowercase keywords describing what the user is going through (e.g. "anxiety", "sleep", "grief", "pregnancy", "family", "work"). Used to search community threads.
+- "specialist": If severe, which type of doctor they need. One of: "Psychiatrist", "Gynaecologist", "Psychologist", "Counsellor", or null if not severe.
 
-Important boundaries:
-- You are NOT a replacement for professional mental health care
-- For crisis situations, gently encourage seeking professional help
-- Never diagnose or prescribe medication
-- Keep conversations focused on emotional wellbeing and self-care
+Respond ONLY with valid JSON:
+{"level": "normal"|"bad"|"severe", "topics": ["..."], "specialist": "..." | null}
 
-Remember: Your goal is to make users feel heard, supported, and empowered on their wellness journey.`;
+No markdown, no explanation, just JSON.`;
 
-/**
- * Build a rich context block from the user's DB data.
- * Returns a string to prepend to the system prompt, or empty string
- * if the user is unauthenticated or data is unavailable.
- */
+// ─── RESPONSE PROMPTS PER LEVEL ────────────────────────────
+const NORMAL_PROMPT = `You are Matri, a warm, empathetic AI wellness companion for women's mental health.
+
+Rules:
+- Be warm, nurturing, non-judgmental
+- You MAY suggest breathing exercises, meditation, journaling, grounding techniques, self-care routines
+- You MUST NOT give medical advice, diagnose, prescribe medication, or recommend specific treatments
+- Keep responses concise (2-4 paragraphs max)
+- Acknowledge feelings before offering suggestions`;
+
+const BAD_PROMPT = `You are Matri, a warm, empathetic AI wellness companion for women's mental health.
+
+The user is experiencing sustained emotional distress. Rules:
+- Be extra gentle and validating
+- Acknowledge their pain deeply before anything else
+- Keep your response brief (2-3 paragraphs) — the app will show them related community threads below your message
+- End by encouraging them that they're not alone and that others in the community have shared similar experiences
+- Do NOT give medical advice or diagnose`;
+
+const SEVERE_PROMPT = `You are Matri, a warm, empathetic AI wellness companion for women's mental health.
+
+The user may be in crisis or needs professional help. Rules:
+- Be extremely gentle, compassionate, and validating
+- Keep response SHORT (1-2 paragraphs max)
+- Acknowledge their courage in sharing
+- Gently and clearly state that what they're going through deserves professional support
+- The app will automatically show them a card to find a SPECIALIST_TYPE below your message, so do NOT include links or specific doctor references — just mention that professional support can really help
+- If there are signs of immediate danger, include crisis helpline info: iCall (9152987821), Vandrevala Foundation (1860-2662-345)`;
+
+// ─── USER CONTEXT BUILDER ──────────────────────────────────
 async function buildUserContext(): Promise<string> {
   try {
     const supabase = await createClient();
@@ -53,17 +73,13 @@ async function buildUserContext(): Promise<string> {
 
     const userId = user.id;
 
-    // Fire all queries in parallel
     const [profileRes, checkinsRes, screeningRes, culturalRes, summariesRes] =
       await Promise.all([
-        // 1. Profile
         supabase
           .from("profiles")
           .select("full_name, life_stage")
           .eq("id", userId)
           .single(),
-
-        // 2. Recent check-ins (last 7 days)
         supabase
           .from("daily_checkins")
           .select(
@@ -76,8 +92,6 @@ async function buildUserContext(): Promise<string> {
           )
           .order("checkin_date", { ascending: false })
           .limit(7),
-
-        // 3. Latest screening
         supabase
           .from("onboarding_screenings")
           .select("type, score, severity, screened_on")
@@ -85,15 +99,11 @@ async function buildUserContext(): Promise<string> {
           .order("screened_on", { ascending: false })
           .limit(1)
           .maybeSingle(),
-
-        // 4. Cultural context
         supabase
           .from("cultural_context_responses")
           .select("cq1, cq2, cq3_single, cq3_multi, cq4, cq5")
           .eq("user_id", userId)
           .maybeSingle(),
-
-        // 5. Recent chat summaries (last 7 days)
         supabase
           .from("chat_summaries")
           .select("summary, themes, mood_label, created_at")
@@ -105,7 +115,6 @@ async function buildUserContext(): Promise<string> {
 
     const parts: string[] = [];
 
-    // Profile
     const profile = profileRes.data;
     if (profile) {
       parts.push(
@@ -113,17 +122,15 @@ async function buildUserContext(): Promise<string> {
       );
     }
 
-    // Check-ins
     const checkins = checkinsRes.data;
     if (checkins && checkins.length > 0) {
-      const checkinLines = checkins.map(
+      const lines = checkins.map(
         (c) =>
           `  ${c.checkin_date}: mood=${c.mood}, score=${c.computed_score}/100 (${c.severity})${c.symptoms?.length ? `, symptoms: ${c.symptoms.join(", ")}` : ""}${c.notes ? `, notes: "${c.notes}"` : ""}`
       );
-      parts.push(`RECENT CHECK-INS (last 7 days):\n${checkinLines.join("\n")}`);
+      parts.push(`RECENT CHECK-INS (last 7 days):\n${lines.join("\n")}`);
     }
 
-    // Screening
     const screening = screeningRes.data;
     if (screening) {
       parts.push(
@@ -131,7 +138,6 @@ async function buildUserContext(): Promise<string> {
       );
     }
 
-    // Cultural context
     const cultural = culturalRes.data;
     if (cultural) {
       const answers = [
@@ -149,43 +155,165 @@ async function buildUserContext(): Promise<string> {
       }
     }
 
-    // Chat summaries
     const summaries = summariesRes.data;
     if (summaries && summaries.length > 0) {
       const sumLines = summaries.map(
         (s) =>
           `  [${new Date(s.created_at).toLocaleDateString()}] (mood: ${s.mood_label || "?"}${s.themes?.length ? `, themes: ${s.themes.join(", ")}` : ""}) ${s.summary}`
       );
-      parts.push(
-        `RECENT CONVERSATION SUMMARIES:\n${sumLines.join("\n")}`
-      );
+      parts.push(`RECENT CONVERSATION SUMMARIES:\n${sumLines.join("\n")}`);
     }
 
     if (parts.length === 0) return "";
 
-    return `\n\n--- USER CONTEXT (private, do not repeat verbatim) ---\n${parts.join("\n\n")}\n--- END CONTEXT ---\n\nUse this context to personalize your responses. Reference specific details naturally when relevant, but never dump raw data back at the user.`;
+    return `\n\n--- USER CONTEXT (private, do not repeat verbatim) ---\n${parts.join("\n\n")}\n--- END CONTEXT ---\n\nUse this context to personalize your responses naturally.`;
   } catch (e) {
     console.error("buildUserContext error:", e);
     return "";
   }
 }
 
+// ─── TRIAGE FUNCTION ───────────────────────────────────────
+interface TriageResult {
+  level: "normal" | "bad" | "severe";
+  topics: string[];
+  specialist: string | null;
+}
+
+async function triageMessage(messages: UIMessage[]): Promise<TriageResult> {
+  try {
+    // Build transcript of last few messages for context
+    const recent = messages.slice(-6);
+    const transcript = recent
+      .map(
+        (m) =>
+          `${m.role === "user" ? "User" : "Matri"}: ${
+            m.parts
+              ?.filter((p: { type: string }) => p.type === "text")
+              .map((p: { type: string; text?: string }) => p.text)
+              .join("") ?? ""
+          }`
+      )
+      .join("\n");
+
+    const { text } = await generateText({
+      model: openrouter.chat("arcee-ai/trinity-large-preview:free"),
+      system: TRIAGE_PROMPT,
+      prompt: transcript,
+    });
+
+    const cleaned = text.replace(/```json\n?|\n?```/g, "").trim();
+    const parsed = JSON.parse(cleaned);
+
+    return {
+      level: ["normal", "bad", "severe"].includes(parsed.level)
+        ? parsed.level
+        : "normal",
+      topics: Array.isArray(parsed.topics) ? parsed.topics : [],
+      specialist: parsed.specialist || null,
+    };
+  } catch (e) {
+    console.error("Triage error, defaulting to normal:", e);
+    return { level: "normal", topics: [], specialist: null };
+  }
+}
+
+// ─── SEARCH RELATED THREADS ────────────────────────────────
+interface ThreadResult {
+  id: string;
+  title: string;
+  category: string | null;
+  created_at: string;
+}
+
+async function searchRelatedThreads(
+  topics: string[]
+): Promise<ThreadResult[]> {
+  try {
+    const supabase = await createClient();
+
+    // Build OR conditions for ilike matching against title and content
+    const conditions = topics
+      .map((t) => `title.ilike.%${t}%,content.ilike.%${t}%`)
+      .join(",");
+
+    const { data } = await supabase
+      .from("threads")
+      .select("id, title, category, created_at")
+      .or(conditions)
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    return data || [];
+  } catch (e) {
+    console.error("Thread search error:", e);
+    return [];
+  }
+}
+
+// ─── MAIN HANDLER ──────────────────────────────────────────
 export async function POST(req: Request) {
   const { messages }: { messages: UIMessage[] } = await req.json();
 
-  // Build rich context from DB (non-blocking — falls back to base prompt)
-  const userContext = await buildUserContext();
-  const systemPrompt = BASE_PROMPT + userContext;
+  // Step 1: Triage the latest user message
+  const triage = await triageMessage(messages);
 
-  const result = streamText({
+  // Step 2: Build user context from DB
+  const userContext = await buildUserContext();
+
+  // Step 3: Handle based on triage level
+  if (triage.level === "normal") {
+    // ── NORMAL: Stream response as usual ──────────────────
+    const systemPrompt = NORMAL_PROMPT + userContext;
+    const result = streamText({
+      model: openrouter.chat("arcee-ai/trinity-large-preview:free"),
+      system: systemPrompt,
+      messages: await convertToModelMessages(messages),
+      abortSignal: req.signal,
+    });
+
+    return result.toUIMessageStreamResponse({
+      originalMessages: messages,
+      consumeSseStream: consumeStream,
+    });
+  }
+
+  if (triage.level === "bad") {
+    // ── BAD: Generate response + search threads ───────────
+    const systemPrompt = BAD_PROMPT + userContext;
+
+    const [aiResult, threads] = await Promise.all([
+      generateText({
+        model: openrouter.chat("arcee-ai/trinity-large-preview:free"),
+        system: systemPrompt,
+        messages: await convertToModelMessages(messages),
+      }),
+      searchRelatedThreads(triage.topics),
+    ]);
+
+    return NextResponse.json({
+      level: "bad",
+      content: aiResult.text,
+      threads,
+      topics: triage.topics,
+    });
+  }
+
+  // ── SEVERE: Generate response + specialist redirect ─────
+  const specialist = triage.specialist || "Psychiatrist";
+  const systemPrompt =
+    SEVERE_PROMPT.replace("SPECIALIST_TYPE", specialist) + userContext;
+
+  const aiResult = await generateText({
     model: openrouter.chat("arcee-ai/trinity-large-preview:free"),
     system: systemPrompt,
     messages: await convertToModelMessages(messages),
-    abortSignal: req.signal,
   });
 
-  return result.toUIMessageStreamResponse({
-    originalMessages: messages,
-    consumeSseStream: consumeStream,
+  return NextResponse.json({
+    level: "severe",
+    content: aiResult.text,
+    specialist,
+    topics: triage.topics,
   });
 }
